@@ -1,0 +1,56 @@
+require('dotenv').config();
+
+module.exports = {
+    telegramToken: process.env.TELEGRAM_TOKEN,
+    telegramChatId: process.env.TELEGRAM_CHAT_ID,
+    coinMarketCapApiKey: process.env.COIN_MARKET_CAP_API_KEY,
+    nbuCurrencyCodeKey: 'cc',
+    nbuApiUrl: 'https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json',
+    coinMarketCapApiUrl: 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest',
+    pantryId: process.env.PANTRY_ID,
+    cryptoCurrencies: {
+        'BTC': 'Bitcoin',
+        'ETH': 'Ethereum',
+        'LTC': 'Litecoin',
+        'USDT': 'Tether',
+        'EOS': 'EOS',
+        'TRX': 'TRON',
+        'ETC': 'Ethereum Classic',
+        'DOGE': 'Dogecoin',
+        'SOL': 'Solana',
+        'XRP': 'Ripple',
+    },
+    nbuMetalCodes: {
+        'XAU': 'Gold',
+        'XAG': 'Silver',
+        'XPT': 'Platinum',
+        'XPD': 'Palladium'
+    },
+    nbuCurrencyCodes: {
+        'USD': 'US dollar',
+        'EUR': 'Euro',
+        'JPY': 'Japanese yen',
+        'GBP': 'Pound sterling',
+        'AUD': 'Australian dollar',
+        'CAD': 'Canadian dollar',
+        'CHF': 'Swiss franc',
+        'CNH': 'Chinese renminbi',
+        'HKD': 'Hong Kong dollar',
+        'NZD': 'New Zealand dollar',
+        'SEK': 'Swedish krona',
+        'DKK': 'Danish krone',
+        'NOK': 'Norwegian krone',
+        'ZAR': 'South African rand',
+        'SGD': 'Singapore dollar',
+        'TRY': 'Turkish lira',
+        'KRW': 'South Korean won',
+        'INR': 'Indian rupee',
+        'BRL': 'Brazilian real',
+        'MXN': 'Mexican peso',
+        'PLN': 'Polish zloty',
+        'THB': 'Thai baht',
+        'CZK': 'Czech koruna',
+        'PHP': 'Philippine peso',
+        'MYR': 'Malaysian ringgit'
+    }
+};
