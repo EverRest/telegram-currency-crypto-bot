@@ -37,38 +37,38 @@ app.listen(port, () => {
     logger.info(`Server is running on port ${port}`);
 });
 
-// cron.schedule('* * * * *', async () => {
-//     try {
-//         const nbuRates = await utils.getExchangeRates();
-//         let storageRates = await pantry.getRates();
-//         let differences = utils.calculateDifferences(nbuRates, storageRates);
-//         let chatId = config.telegramChatId;
-//         await pantry.upsertRates(nbuRates);
-//         let messageOptions = utils.buildMessageNbu(nbuRates, differences);
-//         let $m = await bot.sendMessage(chatId, messageOptions.text, {
-//             reply_markup: messageOptions.reply_markup ,
-//             parse_mode: messageOptions.parse_mode,
-//         });
-//     } catch (error) {
-//         logger.error('Error while fetching exchange rates', error);
-//     }
-// });
-//
-// cron.schedule('* * * * *', async () => {
-//     try {
-//         const cryptoRates = await  CoinMarketCapService.getCryptoRates();
-//         let chatId = config.telegramChatId;
-//         let messageOptions = utils.buildMessageCrypto(cryptoRates);
-//         let $m = await bot.sendMessage(chatId, messageOptions.text, {
-//             reply_markup: messageOptions.reply_markup ,
-//             parse_mode: messageOptions.parse_mode,
-//         });
-//     } catch (error) {
-//         logger.error('Error while fetching exchange rates', error);
-//     }
-// });
+cron.schedule('0 16 * * *', async () => {
+    try {
+        const nbuRates = await utils.getExchangeRates();
+        let storageRates = await pantry.getRates();
+        let differences = utils.calculateDifferences(nbuRates, storageRates);
+        let chatId = config.telegramChatId;
+        await pantry.upsertRates(nbuRates);
+        let messageOptions = utils.buildMessageNbu(nbuRates, differences);
+        let $m = await bot.sendMessage(chatId, messageOptions.text, {
+            reply_markup: messageOptions.reply_markup ,
+            parse_mode: messageOptions.parse_mode,
+        });
+    } catch (error) {
+        logger.error('Error while fetching exchange rates', error);
+    }
+});
 
-cron.schedule('* * * * *', async () => {
+cron.schedule('0 12 * * *', async () => {
+    try {
+        const cryptoRates = await  CoinMarketCapService.getCryptoRates();
+        let chatId = config.telegramChatId;
+        let messageOptions = utils.buildMessageCrypto(cryptoRates);
+        let $m = await bot.sendMessage(chatId, messageOptions.text, {
+            reply_markup: messageOptions.reply_markup ,
+            parse_mode: messageOptions.parse_mode,
+        });
+    } catch (error) {
+        logger.error('Error while fetching exchange rates', error);
+    }
+});
+
+cron.schedule('0 17 * * *', async () => {
     try {
         const metalRates = await utils.getMetalRates();
         let differences = utils.calculateDifferences(metalRates, metalRates);
