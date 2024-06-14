@@ -15,7 +15,7 @@ module.exports = {
         'USDT': 'Tether',
         'EOS': 'EOS',
         'TRX': 'TRON',
-        'ETC': 'Ethereum Classic',
+        'BNB': 'Binance Coin',
         'DOGE': 'Dogecoin',
         'SOL': 'Solana',
         'XRP': 'Ripple',

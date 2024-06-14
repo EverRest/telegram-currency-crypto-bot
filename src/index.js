@@ -37,14 +37,15 @@ app.listen(port, () => {
     logger.info(`Server is running on port ${port}`);
 });
 
-cron.schedule('0 16 * * *', async () => {
+cron.schedule('0 9  * * *', async () => {
     try {
         const nbuRates = await utils.getExchangeRates();
-        let storageRates = await pantry.getRates();
-        let differences = utils.calculateDifferences(nbuRates, storageRates);
+        // let storageRates = await pantry.getRates();
+      //  let differences = utils.calculateDifferences(nbuRates, storageRates);
         let chatId = config.telegramChatId;
-        await pantry.upsertRates(nbuRates);
-        let messageOptions = utils.buildMessageNbu(nbuRates, differences);
+      //  await pantry.upsertRates(nbuRates);
+        console.log(nbuRates);
+        let messageOptions = utils.buildMessageNbu(nbuRates, []);
         let $m = await bot.sendMessage(chatId, messageOptions.text, {
             reply_markup: messageOptions.reply_markup ,
             parse_mode: messageOptions.parse_mode,
@@ -68,13 +69,13 @@ cron.schedule('0 12 * * *', async () => {
     }
 });
 
-cron.schedule('0 17 * * *', async () => {
+cron.schedule('0  10 * * *', async () => {
     try {
         const metalRates = await utils.getMetalRates();
         let differences = utils.calculateDifferences(metalRates, metalRates);
         let chatId = config.telegramChatId;
         let messageOptions = utils.buildMessageMetal(metalRates, differences);
-        let $m = await bot.sendMessage(chatId, messageOptions.text, {
+        await bot.sendMessage(chatId, messageOptions.text, {
             reply_markup: messageOptions.reply_markup ,
             parse_mode: messageOptions.parse_mode,
         });

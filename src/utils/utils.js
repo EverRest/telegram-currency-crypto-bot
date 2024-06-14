@@ -7,7 +7,7 @@ const {currencyCodes} = require("../config");
 const emoji = require('node-emoji');
 const {cryptoCurrencies} = require("../config");
 
-async function getExchangeRates() {
+async function  getExchangeRates() {
     const nbuRatesArray = await nbuService.getExchangeRates();
     let nbuRates = {};
     nbuRatesArray.forEach(rate => {
