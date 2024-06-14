@@ -45,11 +45,11 @@ function buildMessageNbu(nbuRates, differences) {
         month: '2-digit',
         year: 'numeric'
     });
-    let message = `Національний Банк України станом на ${exchangeDate}:\n`;
+    let message = `<b>Національний Банк України станом на ${exchangeDate}:</b>\n`;
     for (let key in nbuRates) {
         let currencyCode = nbuRates[key].cc.toUpperCase();
         const flagEmoji = emojiFlags.getEmojiByCurrencyCode(currencyCode);
-        message += `${flagEmoji} ${nbuRates[key].txt}: ${nbuRates[key].rate} UAH`;
+        message += `${flagEmoji} <b>${nbuRates[key].txt}</b>: ${nbuRates[key].rate} <b>UAH</b>`;
         if (differences[key] !== undefined) {
             const sign = differences[key] > 0 ? '+' : '-';
             message += ` (${sign}${differences[key]})`;
@@ -93,7 +93,7 @@ function buildMessageMetal(metalRates, differences) {
 
 function buildMessageCrypto(cryptoRates) {
     let rateDate = new Date().toLocaleDateString('uk-UA', {   day: '2-digit', month: '2-digit', year: 'numeric' });
-    let message = `<b>Криптовалюти по CoinMarketCap станом на : ${rateDate}</b>\n`;
+    let message = `<b>Криптовалюти по CoinMarketCap станом на ${rateDate}:</b>\n`;
     let CryptoData = cryptoRates.data ?? [];
     CryptoData = CryptoData.filter(crypto => Object.keys(cryptoCurrencies).includes(crypto.symbol.toUpperCase()));
     for (let i = 0; i < CryptoData.length; i++) {
