@@ -1,14 +1,14 @@
-const NbuServiceClass = require('../api/NbuService');
-const coi = require('../api/CoinMarketCapService');
-const coinMarketCapService = new coi();
-const nbuService = new NbuServiceClass();
 const emojiFlags = require('country-currency-emoji-flags');
-const {currencyCodes} = require("../config");
 const emoji = require('node-emoji');
 const {cryptoCurrencies} = require("../config");
+const coinMarketCapService = require('../api/CoinMarketCapService');
+const CoinMarketCapService = new coinMarketCapService();
+const NbuServiceClass = require('../api/NbuService');
+const nbuService = new NbuServiceClass();
 
-async function  getExchangeRates() {
+async function getExchangeRates() {
     const nbuRatesArray = await nbuService.getExchangeRates();
+    if (!nbuRatesArray) return;
     let nbuRates = {};
     nbuRatesArray.forEach(rate => {
         nbuRates[rate.cc] = rate;
@@ -18,6 +18,7 @@ async function  getExchangeRates() {
 
 async function getMetalRates() {
     const metalRatesArray = await nbuService.geMetalRates();
+    if (!metalRatesArray) return;
     let metalRates = {};
     metalRatesArray.forEach(rate => {
         metalRates[rate.cc] = rate;
@@ -26,14 +27,34 @@ async function getMetalRates() {
 }
 
 async function getCryptoRates() {
-    return await coinMarketCapService.getCryptoRates();
+    const cryptoRatesArray = await CoinMarketCapService.getCryptoRates();
+    if (!cryptoRatesArray) return;
+    let cryptoRates = {};
+    cryptoRatesArray.data.forEach(rate => {
+        cryptoRates[rate.symbol] = rate;
+    });
+    return cryptoRates;
 }
 
-function calculateDifferences(nbuRates, storageRates) {
+function calculateDifferences(newRates, oldRates) {
     let differences = {};
-    for (let key in nbuRates) {
-        if (nbuRates[key] && storageRates[key] && nbuRates[key].rate !== storageRates[key].rate) {
-            differences[key] = nbuRates[key].rate - storageRates[key].rate;
+    for (let key in newRates) {
+        if (newRates[key] && oldRates[key]) {
+            differences[key] = newRates[key].rate - oldRates[key].rate;
+        } else {
+            differences[key] = 0;
+        }
+    }
+    return differences;
+}
+
+function calculateCryptoDifferences(newRates, oldRates) {
+    let differences = {};
+    for (let key in newRates) {
+        if (newRates[key] && oldRates[key]) {
+            differences[key] = newRates[key].quote.USD.price - oldRates[key].quote.USD.price;
+        } else {
+            differences[key] = 0;
         }
     }
     return differences;
@@ -49,19 +70,17 @@ function buildMessageNbu(nbuRates, differences) {
     for (let key in nbuRates) {
         let currencyCode = nbuRates[key].cc.toUpperCase();
         const flagEmoji = emojiFlags.getEmojiByCurrencyCode(currencyCode);
-        message += `${flagEmoji} <b>${nbuRates[key].txt}</b>: ${nbuRates[key].rate} <b>UAH</b>`;
+        message += `${flagEmoji} <b>${nbuRates[key].txt}</b>: ${nbuRates[key].rate} <b> UAH </b>`;
         if (differences[key] !== undefined) {
             const sign = differences[key] > 0 ? '+' : '-';
-            message += ` (${sign}${differences[key]})`;
+            const differenceWithoutSign = Math.abs(differences[key]);
+            message += ` (${sign} ${differenceWithoutSign.toFixed(4)})`;
         }
         message += '\n';
     }
     return {
         text: message,
         parse_mode: 'HTML',
-        // reply_markup: {
-        // Add your reply_markup options here
-        // }
     };
 }
 
@@ -78,38 +97,47 @@ function buildMessageMetal(metalRates, differences) {
         message += `${randomEmoji} <b>${metalRates[key].txt}</b>: ${metalRates[key].rate} <b>UAH</b>`;
         if (differences[key] !== undefined) {
             const sign = differences[key] > 0 ? '+' : '-';
-            message += ` (${sign}${differences[key]})`;
+            const differenceWithoutSign = Math.abs(differences[key]);
+            message += ` (${sign}${differenceWithoutSign.toFixed(4)})`;
         }
         message += '\n';
     }
     return {
         text: message,
         parse_mode: 'HTML',
-        // reply_markup: {
-        // Add your reply_markup options here
-        // }
     };
 }
 
-function buildMessageCrypto(cryptoRates) {
-    let rateDate = new Date().toLocaleDateString('uk-UA', {   day: '2-digit', month: '2-digit', year: 'numeric' });
+function buildMessageCrypto(cryptoRates, differences) {
+    let rateDate = new Date().toLocaleDateString('uk-UA', {day: '2-digit', month: '2-digit', year: 'numeric'});
     let message = `<b>Криптовалюти по CoinMarketCap станом на ${rateDate}:</b>\n`;
-    let CryptoData = cryptoRates.data ?? [];
-    CryptoData = CryptoData.filter(crypto => Object.keys(cryptoCurrencies).includes(crypto.symbol.toUpperCase()));
-    for (let i = 0; i < CryptoData.length; i++) {
+    let cryptoData = cryptoRates.data ?? [];
+    cryptoData = cryptoData.filter(crypto => Object.keys(cryptoCurrencies).includes(crypto.symbol.toUpperCase()));
+    for (let i = 0; i < cryptoData.length; i++) {
         const randomEmoji = emoji.random().emoji;
-        let price = CryptoData[i].quote.USD.price;
+        let price = cryptoData[i].quote.USD.price;
         price = price ? price.toFixed(2) : "0.00";
-        message += `${randomEmoji}  <b>${CryptoData[i].name}</b>:  ${price} <b>USD</b>`;
+        message += `${randomEmoji}  <b>${cryptoData[i].name}</b>:  ${price} <b>USD</b>`;
+        if (differences[cryptoData[i].symbol] !== undefined) {
+            const sign = differences[cryptoData[i].symbol] > 0 ? '+' : '-';
+            const differenceWithoutSign = Math.abs(differences[cryptoData[i].symbol]);
+            message += ` (${sign}${differenceWithoutSign.toFixed(8)})`;
+        }
         message += '\n';
     }
     return {
         text: message,
         parse_mode: 'HTML',
-        // reply_markup: {
-        // Add your reply_markup options here
-        // }
     };
 }
 
-module.exports = {getExchangeRates, calculateDifferences, buildMessageNbu, getCryptoRates, buildMessageCrypto, getMetalRates, buildMessageMetal};
+module.exports = {
+    getExchangeRates,
+    calculateDifferences,
+    buildMessageNbu,
+    getCryptoRates,
+    buildMessageCrypto,
+    calculateCryptoDifferences,
+    getMetalRates,
+    buildMessageMetal
+};

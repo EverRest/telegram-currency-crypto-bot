@@ -1,14 +1,12 @@
 const dotenv = require('dotenv');
 dotenv.config({path: '../.env'});
+const fs = require('fs');
 const config = require('./config');
 const bot = require('./bot/telegram');
-const pantry = require('./storage/pantry');
 const cron = require('node-cron');
 const winston = require('winston');
 const utils = require('./utils/utils');
 const express = require('express');
-const coinMarketCapService = require('./api/CoinMarketCapService');
-    const CoinMarketCapService  = new coinMarketCapService();
 
 const logger = winston.createLogger({
     level: 'info',
@@ -40,47 +38,55 @@ app.listen(port, () => {
 cron.schedule('0 9  * * *', async () => {
     try {
         const nbuRates = await utils.getExchangeRates();
-        // let storageRates = await pantry.getRates();
-      //  let differences = utils.calculateDifferences(nbuRates, storageRates);
+        const jsonData = fs.readFileSync('./storage/currencies.json', 'utf8');
+        let oldRates = jsonData ? JSON.parse(jsonData) : {};
+        let differences = utils.calculateDifferences(nbuRates, oldRates);
+        fs.writeFileSync('./storage/currencies.json', JSON.stringify(nbuRates));
         let chatId = config.telegramChatId;
-      //  await pantry.upsertRates(nbuRates);
-        console.log(nbuRates);
-        let messageOptions = utils.buildMessageNbu(nbuRates, []);
-        let $m = await bot.sendMessage(chatId, messageOptions.text, {
-            reply_markup: messageOptions.reply_markup ,
-            parse_mode: messageOptions.parse_mode,
-        });
-    } catch (error) {
-        logger.error('Error while fetching exchange rates', error);
-    }
-});
-
-cron.schedule('0 12 * * *', async () => {
-    try {
-        const cryptoRates = await  CoinMarketCapService.getCryptoRates();
-        let chatId = config.telegramChatId;
-        let messageOptions = utils.buildMessageCrypto(cryptoRates);
-        let $m = await bot.sendMessage(chatId, messageOptions.text, {
-            reply_markup: messageOptions.reply_markup ,
-            parse_mode: messageOptions.parse_mode,
-        });
-    } catch (error) {
-        logger.error('Error while fetching exchange rates', error);
-    }
-});
-
-cron.schedule('0  10 * * *', async () => {
-    try {
-        const metalRates = await utils.getMetalRates();
-        let differences = utils.calculateDifferences(metalRates, metalRates);
-        let chatId = config.telegramChatId;
-        let messageOptions = utils.buildMessageMetal(metalRates, differences);
+        let messageOptions = utils.buildMessageNbu(nbuRates, differences);
         await bot.sendMessage(chatId, messageOptions.text, {
             reply_markup: messageOptions.reply_markup ,
             parse_mode: messageOptions.parse_mode,
         });
     } catch (error) {
         logger.error('Error while fetching exchange rates', error);
+    }
+});
+
+cron.schedule('0 11 * * *', async () => {
+    try {
+        const cryptoRates = await utils.getCryptoRates();
+        const jsonData = fs.readFileSync('./storage/crypto.json', 'utf8');
+        let oldRates = jsonData ? JSON.parse(jsonData) : {};
+        let differences = utils.calculateCryptoDifferences(cryptoRates, oldRates);
+        fs.writeFileSync('./storage/crypto.json', JSON.stringify(cryptoRates));
+        let chatId = config.telegramChatId;
+        console.log(differences);
+        let messageOptions = utils.buildMessageCrypto(cryptoRates,differences);
+        await bot.sendMessage(chatId, messageOptions.text, {
+            reply_markup: messageOptions.reply_markup ,
+            parse_mode: messageOptions.parse_mode,
+        });
+    } catch (error) {
+        logger.error('Error while fetching crypto rates', error);
+    }
+});
+
+cron.schedule('0  10 * * *', async () => {
+    try {
+            const metalRates = await utils.getMetalRates();
+            const jsonData = fs.readFileSync('./storage/metal.json', 'utf8');
+            let oldRates = jsonData ? JSON.parse(jsonData) : {};
+            let differences = utils.calculateDifferences(metalRates, oldRates);
+            fs.writeFileSync('./storage/metal.json', JSON.stringify(metalRates));
+            let chatId = config.telegramChatId;
+            let messageOptions = utils.buildMessageMetal(metalRates, differences);
+            await bot.sendMessage(chatId, messageOptions.text, {
+                reply_markup: messageOptions.reply_markup ,
+                parse_mode: messageOptions.parse_mode,
+            });
+    } catch (error) {
+        logger.error('Error while fetching metal rates', error);
     }
 });
 
